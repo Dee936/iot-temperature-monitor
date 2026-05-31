@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT Real-Time Temperature Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f6f4f0; --surface: #ffffff; --border: #e4e0d8;
+    --text-primary: #1c1a17; --text-secondary: #5e5b54; --text-muted: #9c9890;
+    --accent: #b84a1a; --accent-light: #fdf0ea; --accent-mid: #e07040;
+    --cool: #1a6b8a; --cool-light: #e8f4f8;
+    --tag-bg: #eeecea;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --sans: 'Inter', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text-primary); line-height: 1.6; font-size: 16px; }
+  nav { position: fixed; top: 0; left: 0; right: 0; background: rgba(246,244,240,0.93); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 100; padding: 0 2rem; height: 58px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-brand { font-family: var(--serif); font-size: 1.2rem; color: var(--accent); }
+  .nav-links { display: flex; gap: 2rem; }
+  .nav-links a { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); text-decoration: none; letter-spacing: 0.07em; text-transform: uppercase; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .hero { padding: 140px 2rem 80px; max-width: 920px; margin: 0 auto; animation: fadeUp 0.7s ease both; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--accent-light); color: var(--accent); font-size: 0.73rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.8rem; }
+  .hero-badge::before { content: ''; width: 6px; height: 6px; background: var(--accent-mid); border-radius: 50%; }
+  .hero h1 { font-family: var(--serif); font-size: clamp(2.4rem, 5vw, 3.8rem); line-height: 1.15; margin-bottom: 1rem; }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .hero-sub { font-size: 1.05rem; color: var(--text-secondary); max-width: 600px; line-height: 1.8; margin-bottom: 2.2rem; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.82rem; color: var(--text-muted); }
+  .hero-meta span { display: flex; align-items: center; gap: 0.4rem; }
+  .hero-meta strong { color: var(--text-secondary); }
+  .divider { max-width: 920px; margin: 0 auto; border: none; border-top: 1px solid var(--border); }
+  section { max-width: 920px; margin: 0 auto; padding: 64px 2rem; animation: fadeUp 0.5s ease both; }
+  .section-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
+  .section-title { font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2.1rem); color: var(--text-primary); margin-bottom: 1.4rem; line-height: 1.2; }
+  .section-body { font-size: 1rem; color: var(--text-secondary); line-height: 1.85; max-width: 700px; }
+  .overview-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2.4rem; margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .oi-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem; }
+  .oi-value { font-size: 0.96rem; color: var(--text-primary); font-weight: 500; line-height: 1.55; }
+  .steps { margin-top: 2.4rem; display: flex; flex-direction: column; }
+  .step { display: grid; grid-template-columns: 48px 1fr; gap: 1.2rem; padding: 1.6rem 0; border-bottom: 1px solid var(--border); }
+  .step:last-child { border-bottom: none; }
+  .step-num { width: 36px; height: 36px; background: var(--accent-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 1rem; color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+  .step-content h4 { font-size: 0.97rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.35rem; }
+  .step-content p { font-size: 0.91rem; color: var(--text-secondary); line-height: 1.78; }
+  .step-tag { display: inline-block; background: var(--tag-bg); color: var(--text-secondary); font-size: 0.71rem; font-weight: 500; padding: 0.2rem 0.6rem; border-radius: 4px; margin-top: 0.5rem; }
+  .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-top: 2rem; }
+  .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.8rem; transition: border-color 0.2s, transform 0.2s; }
+  .feature-card:hover { border-color: var(--accent-mid); transform: translateY(-2px); }
+  .fc-icon { font-size: 1.8rem; margin-bottom: 0.8rem; }
+  .fc-title { font-size: 0.96rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; }
+  .fc-desc { font-size: 0.86rem; color: var(--text-secondary); line-height: 1.7; }
+  .states-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-top: 1.5rem; }
+  .state-hot { background: var(--accent-light); border: 1px solid #f5c4aa; border-radius: 14px; padding: 1.8rem; }
+  .state-cool { background: var(--cool-light); border: 1px solid #b0d8e8; border-radius: 14px; padding: 1.8rem; }
+  .state-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.9rem; }
+  .state-hot .state-label { color: var(--accent); }
+  .state-cool .state-label { color: var(--cool); }
+  .state-flow { display: flex; flex-direction: column; gap: 0.5rem; }
+  .state-step { display: flex; align-items: center; gap: 0.7rem; font-size: 0.87rem; }
+  .state-hot .state-step { color: #8b3010; }
+  .state-cool .state-step { color: #1a4f68; }
+  .sdot-hot { width: 7px; height: 7px; background: var(--accent-mid); border-radius: 50%; flex-shrink: 0; }
+  .sdot-cool { width: 7px; height: 7px; background: #4a9ab8; border-radius: 50%; flex-shrink: 0; }
+  .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1rem; margin-top: 2rem; }
+  .tech-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.4rem 1.5rem; transition: border-color 0.2s, transform 0.2s; }
+  .tech-card:hover { border-color: var(--accent-mid); transform: translateY(-2px); }
+  .tc-role { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem; }
+  .tc-name { font-size: 0.98rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.3rem; }
+  .tc-desc { font-size: 0.81rem; color: var(--text-secondary); line-height: 1.5; }
+  .outcomes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 1rem; margin-top: 2rem; }
+  .outcome-card { background: var(--accent-light); border: 1px solid #f5c4aa; border-radius: 14px; padding: 1.6rem; }
+  .oc-icon { font-size: 1.5rem; margin-bottom: 0.7rem; }
+  .oc-title { font-size: 0.88rem; font-weight: 600; color: var(--accent); margin-bottom: 0.4rem; }
+  .oc-desc { font-size: 0.84rem; color: #8b3010; line-height: 1.6; }
+  footer { border-top: 1px solid var(--border); padding: 2.5rem 2rem; text-align: center; font-size: 0.82rem; color: var(--text-muted); }
+  footer strong { color: var(--text-secondary); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @media (max-width: 640px) { .features-grid, .states-grid, .overview-card { grid-template-columns: 1fr; } .nav-links { display: none; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-brand">ThermoControl IoT</span>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#how">How It Works</a>
+    <a href="#features">Features</a>
+    <a href="#tech">Tech Stack</a>
+    <a href="#results">Results</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">IoT · Embedded Systems Project</div>
+  <h1>Smart temperature,<br><em>smarter</em> control.</h1>
+  <p class="hero-sub">A real-time IoT system that monitors surrounding temperature using a physical sensor, displays live readings on a mobile app, and automatically activates a fan to cool the environment — all controllable from your phone.</p>
+  <div class="hero-meta">
+    <span>🌡️ <strong>IoT · Embedded Systems</strong></span>
+    <span>📱 <strong>Mobile App Control</strong></span>
+    <span>⚡ <strong>Real-Time Automation</strong></span>
+  </div>
+</div>
+
+<hr class="divider">
+
+<section id="about">
+  <div class="section-label">Overview</div>
+  <h2 class="section-title">What is ThermoControl IoT?</h2>
+  <p class="section-body">This project combines embedded hardware and mobile software into a smart environment monitoring system. A physical temperature sensor continuously reads the surroundings, sends data to a mobile app in real time, and triggers automatic fan control when temperature crosses a threshold — while giving full manual control via the app switch.</p>
+  <div class="overview-card">
+    <div class="overview-item">
+      <div class="oi-label">Problem</div>
+      <div class="oi-value">Fans and cooling systems need to be turned on manually even when automation is straightforward — wasting time and energy.</div>
+    </div>
+    <div class="overview-item">
+      <div class="oi-label">Solution</div>
+      <div class="oi-value">An IoT system with a sensor, microcontroller, and mobile app that automates fan control and shows live temperature readings.</div>
+    </div>
+    <div class="overview-item">
+      <div class="oi-label">Hardware</div>
+      <div class="oi-value">Temperature sensor + microcontroller (Arduino/ESP8266) + fan with relay switch module</div>
+    </div>
+    <div class="overview-item">
+      <div class="oi-label">Software</div>
+      <div class="oi-value">Mobile app with real-time temperature display and manual ON/OFF switch controls</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section id="how">
+  <div class="section-label">System Workflow</div>
+  <h2 class="section-title">How It Works</h2>
+  <p class="section-body">The system runs a continuous sense → transmit → display → respond loop entirely in real time.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Temperature Sensing</h4>
+        <p>A DHT11/DHT22 temperature sensor attached to the hardware model continuously reads the surrounding ambient temperature at regular intervals.</p>
+        <span class="step-tag">DHT11 / DHT22 Sensor</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Microcontroller Processing</h4>
+        <p>The Arduino/ESP8266 microcontroller reads the sensor values, processes them, and transmits the temperature data wirelessly to the connected mobile application.</p>
+        <span class="step-tag">Arduino / ESP8266 · Wi-Fi Transmission</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Real-Time App Display</h4>
+        <p>The mobile app receives live temperature data and displays it clearly — showing the current reading and whether the surroundings are hot or cold with continuous updates.</p>
+        <span class="step-tag">Mobile App · Live Data Feed</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Threshold Detection</h4>
+        <p>The system constantly checks whether the temperature crosses a predefined hot threshold. When exceeded, it automatically triggers the cooling response without any user action.</p>
+        <span class="step-tag">Threshold Logic · Conditional Automation</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <h4>Automatic Fan Control</h4>
+        <p>When the threshold is breached, the relay switch connected to the fan turns ON automatically — the fan starts running and cools the surrounding environment.</p>
+        <span class="step-tag">Relay Module · Auto Fan Activation</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <h4>Live Cooling Feedback</h4>
+        <p>As the fan cools the surroundings, the app reflects the dropping temperature in real time — you can watch the temperature fall live on screen as the system responds.</p>
+        <span class="step-tag">Real-Time Feedback · App UI Update</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section id="features">
+  <div class="section-label">Capabilities</div>
+  <h2 class="section-title">Key Features</h2>
+  <p class="section-body">The system combines automatic intelligence with manual control — giving users the best of both worlds.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="fc-icon">📱</div>
+      <div class="fc-title">Mobile App Switch Control</div>
+      <div class="fc-desc">A dedicated mobile app lets you toggle the fan switch ON or OFF from your phone — no need to physically touch the hardware at any point.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🌡️</div>
+      <div class="fc-title">Live Temperature Display</div>
+      <div class="fc-desc">The app shows real-time temperature readings continuously updated from the physical sensor — clearly indicating how hot or cold the surrounding environment is.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🤖</div>
+      <div class="fc-title">Auto Fan Activation</div>
+      <div class="fc-desc">When temperature crosses the hot threshold, the fan switches on automatically — smart cooling without any manual input needed.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">📉</div>
+      <div class="fc-title">Cooling Progress Tracking</div>
+      <div class="fc-desc">Once the fan activates, the app shows the temperature dropping in real time — closing the full feedback loop so you can see the system working live.</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 2.5rem;">
+    <div class="section-label">Temperature States</div>
+    <div class="states-grid">
+      <div class="state-hot">
+        <div class="state-label">🔥 Too Hot — Auto Response</div>
+        <div class="state-flow">
+          <div class="state-step"><span class="sdot-hot"></span>Sensor reads high temperature</div>
+          <div class="state-step"><span class="sdot-hot"></span>Threshold exceeded</div>
+          <div class="state-step"><span class="sdot-hot"></span>Relay turns fan ON automatically</div>
+          <div class="state-step"><span class="sdot-hot"></span>App shows fan is active</div>
+          <div class="state-step"><span class="sdot-hot"></span>Temperature begins to drop</div>
+        </div>
+      </div>
+      <div class="state-cool">
+        <div class="state-label">❄️ Cooling Down — Live Update</div>
+        <div class="state-flow">
+          <div class="state-step"><span class="sdot-cool"></span>Fan running, environment cooling</div>
+          <div class="state-step"><span class="sdot-cool"></span>Sensor detects falling temperature</div>
+          <div class="state-step"><span class="sdot-cool"></span>App updates reading in real time</div>
+          <div class="state-step"><span class="sdot-cool"></span>Temperature reaches safe level</div>
+          <div class="state-step"><span class="sdot-cool"></span>Fan switches OFF automatically</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section id="tech">
+  <div class="section-label">Technology</div>
+  <h2 class="section-title">Tech Stack</h2>
+  <p class="section-body">A complete hardware-to-software stack — from physical sensors to mobile interface — built for real-time IoT performance.</p>
+  <div class="tech-grid">
+    <div class="tech-card">
+      <div class="tc-role">Microcontroller</div>
+      <div class="tc-name">Arduino / ESP8266</div>
+      <div class="tc-desc">Reads sensor data, runs control logic, and transmits temperature values wirelessly.</div>
+    </div>
+    <div class="tech-card">
+      <div class="tc-role">Temperature Sensor</div>
+      <div class="tc-name">DHT11 / DHT22</div>
+      <div class="tc-desc">Measures ambient temperature and humidity with high precision and low power draw.</div>
+    </div>
+    <div class="tech-card">
+      <div class="tc-role">Fan Control</div>
+      <div class="tc-name">Relay Module</div>
+      <div class="tc-desc">Electrically controlled switch that turns the fan ON or OFF based on microcontroller signals.</div>
+    </div>
+    <div class="tech-card">
+      <div class="tc-role">Mobile App</div>
+      <div class="tc-name">MIT App Inventor</div>
+      <div class="tc-desc">Used to build the temperature monitoring and switch control interface for the mobile app.</div>
+    </div>
+    <div class="tech-card">
+      <div class="tc-role">Communication</div>
+      <div class="tc-name">Wi-Fi / Bluetooth</div>
+      <div class="tc-desc">Wireless protocol connecting the hardware module to the mobile app for real-time data transfer.</div>
+    </div>
+    <div class="tech-card">
+      <div class="tc-role">Programming</div>
+      <div class="tc-name">Arduino IDE (C++)</div>
+      <div class="tc-desc">Firmware written in C++ to handle sensor reading, threshold logic, and relay control.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section id="results">
+  <div class="section-label">Outcomes</div>
+  <h2 class="section-title">Results & Impact</h2>
+  <p class="section-body">The system worked end-to-end — from physical hardware to mobile app — demonstrating a fully functional IoT solution with real-time responsiveness.</p>
+  <div class="outcomes-grid">
+    <div class="outcome-card">
+      <div class="oc-icon">✅</div>
+      <div class="oc-title">Real-Time Monitoring</div>
+      <div class="oc-desc">Temperature readings updated live on the app with minimal delay — accurately reflecting physical changes in the environment.</div>
+    </div>
+    <div class="outcome-card">
+      <div class="oc-icon">⚡</div>
+      <div class="oc-title">Auto Fan Response</div>
+      <div class="oc-desc">Fan activated automatically when temperature crossed the threshold — no manual input required for the cooling response.</div>
+    </div>
+    <div class="outcome-card">
+      <div class="oc-icon">📱</div>
+      <div class="oc-title">Remote Switch Control</div>
+      <div class="oc-desc">Manual ON/OFF toggle worked smoothly from the mobile app — giving full user control alongside the automation.</div>
+    </div>
+    <div class="outcome-card">
+      <div class="oc-icon">📉</div>
+      <div class="oc-title">Live Cooling Feedback</div>
+      <div class="oc-desc">App showed temperature dropping in real time as the fan ran — closing the complete sense-to-display feedback loop.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p><strong>IoT Real-Time Temperature Monitor</strong> &middot; Pragadeeshwari S G T &middot; B.Tech CSE, SRMIST</p>
+  <p style="margin-top:0.5rem;">Built with Arduino · DHT Sensor · Relay Module · MIT App Inventor</p>
+</footer>
+
+</body>
+</html>
